@@ -2,7 +2,9 @@ def validar_usuario(lista_pacientes, usuario, senha):
     for i in range(len(lista_pacientes)):
         if (lista_pacientes[i]['Usuario'] == usuario and lista_pacientes[i]['Senha'] == senha):
             print("Conectando...")
-            mostrar_menu_principal(lista_pacientes[i])
+            paciente = lista_pacientes[i]
+            return paciente
+    return False
 
 def localizar_usuario(lista_pacientes, usuario):
     indice = -1
@@ -35,8 +37,6 @@ def cadastrar_usuario(lista_pacientes):
         print("Paciente cadastrado com sucesso!")
         mostrar_menu_principal(paciente)
 
-
-
 # === Menu Principal ===
 def mostrar_menu_principal(paciente):
     print("\n" + "=" * 50)
@@ -60,10 +60,96 @@ def mostrar_menu_principal(paciente):
         case "4":
             print("Lembretes")
         case "5":
-            print("Area do Paciente")
+            area_paciente(paciente)
         case "6":
             main()
 
+# AREA DO PACIENTE
+# === Area do Paciente ===
+def area_paciente(paciente):
+    print("\n" + "=" * 50)
+    print("👤 AREA DO PACIENTE".center(50))
+    print("=" * 50)
+    print(f"\n Usuario: {paciente['Usuario']}")
+    print(f" Nome: {paciente['Nome']}")
+    print(f" Data de Nascimento: {paciente['Data de Nascimento']}")
+    print("=" * 50)
+    print("1️⃣  Alterar usuario")
+    print("2️⃣  Alterar nome")
+    print("3️⃣  Alterar senha")
+    print("4️⃣  Alterar data de nascimento")
+    print("5️⃣  Deletar conta")
+    print("6️⃣  Voltar para o menu")
+    print("-" * 50)
+    opcao = input("Escolha uma opção: ")
+    match opcao:
+        case "1":
+            alterar_usuario(paciente)
+        case "2":
+            alterar_nome(paciente)
+        case "3":
+            alterar_senha(paciente)
+        case "4":
+            print("Alterar data de nascimento")
+        case "5":
+            print("Deletar conta")
+        case "6":
+            mostrar_menu_principal(paciente)
+
+# == Alterar usuario ==
+def alterar_usuario(paciente):
+    print("\n" + "-" * 50)
+    print("Usuario atual: " + paciente['Usuario'])
+    novo_usuario = input("Digite o novo usuario: ")
+    print("\n Novo usuario sera: " + novo_usuario)
+    print("-" * 50)
+    opcao = input("Deseja salvar a alteração (1-SIM/2-NAO): ")
+    match opcao:
+        case "1":
+            indice = localizar_usuario(lista_pacientes, paciente['Usuario'])
+            lista_pacientes[indice]['Usuario'] = novo_usuario
+            paciente = lista_pacientes[indice]
+            area_paciente(paciente)
+        case "2":
+            area_paciente(paciente)
+
+# == Alterar nome ==
+def alterar_nome(paciente):
+    print("\n" + "-" * 50)
+    print("Nome atual: " + paciente['Nome'])
+    novo_nome = input("Digite o novo nome: ")
+    print("\n Novo nome sera: " + novo_nome)
+    print("-" * 50)
+    opcao = input("Deseja salvar a alteração (1-SIM/2-NAO): ")
+    match opcao:
+        case "1":
+            indice = localizar_usuario(lista_pacientes, paciente['Usuario'])
+            lista_pacientes[indice]['Nome'] = novo_nome
+            paciente = lista_pacientes[indice]
+            area_paciente(paciente)
+        case "2":
+            area_paciente(paciente)
+
+# == Alterar Senha ==
+def alterar_senha(paciente):
+    print("\n" + "-" * 50)
+    print("Senha atual: " + paciente['Senha'])
+    nova_senha = input("Digite a nova senha: ")
+    print("\n Novo senha sera: " + nova_senha)
+    print("-" * 50)
+    opcao = input("Deseja salvar a alteração (1-SIM/2-NAO): ")
+    match opcao:
+        case "1":
+            indice = localizar_usuario(lista_pacientes, paciente['Usuario'])
+            lista_pacientes[indice]['Senha'] = nova_senha
+            paciente = lista_pacientes[indice]
+            area_paciente(paciente)
+        case "2":
+            area_paciente(paciente)
+
+
+
+# PESQUISA DE SATISFAÇÃO
 def calcular_media(notas):
     n1 = float(notas['App'])
     n2 = float(notas['Site'])
@@ -80,7 +166,6 @@ def pesquisa_satisfacao(paciente):
     iniciar = input("\nAperte 1 para começar a pesquisa: ")
 
     if iniciar == "1":
-        # Pergunta sobre o site
         while True:
             try:
                 site = float(input("\nDe 0 a 10, qual nota você dá para nosso site? "))
@@ -91,7 +176,6 @@ def pesquisa_satisfacao(paciente):
             except ValueError:
                 print("⚠️ Por favor, digite apenas números.")
 
-        # Pergunta sobre o aplicativo
         while True:
             try:
                 app = float(input("\nDe 0 a 10, qual nota você dá para nosso aplicativo? "))
@@ -102,7 +186,6 @@ def pesquisa_satisfacao(paciente):
             except ValueError:
                 print("⚠️ Por favor, digite apenas números.")
 
-        # Pergunta sobre o suporte
         while True:
             try:
                 suporte = float(input("\nDe 0 a 10, qual nota você dá para nosso suporte? "))
@@ -113,7 +196,6 @@ def pesquisa_satisfacao(paciente):
             except ValueError:
                 print("⚠️ Por favor, digite apenas números.")
 
-        # Armazena notas em dicionário
         notas = {
             'App': app,
             'Site': site,
@@ -134,7 +216,7 @@ def pesquisa_satisfacao(paciente):
     mostrar_menu_principal(paciente)
 
 
-# === Main ===
+# INICIO DO PROGRAMA
 def main():
     print("\n" + "=" * 50)
     print("🌐 SISTEMA DE ATENDIMENTO AO USUÁRIO".center(50))
@@ -145,12 +227,16 @@ def main():
     if opcao == "1":
         usuario = input("\nUsuario: ")
         senha = input("\nSenha: ")
-        validar_usuario(lista_pacientes, usuario, senha)
+        paciente = validar_usuario(lista_pacientes, usuario, senha)
+        if paciente:
+            mostrar_menu_principal(paciente)
+        else:
+            print("Usuario ou senha incorretos. Tente novamente")
+            main()
+
     else:
         cadastrar_usuario(lista_pacientes)
 
-
-# === Inicio do Programa ===
 lista_pacientes = []
 pacienteteste = {
             'Usuario':"pacienteteste",
