@@ -52,7 +52,7 @@ def mostrar_menu_principal(paciente):
     opcao = input("Escolha uma opção: ")
     match opcao:
         case "1":
-            pesquisa_satisfacao(paciente)
+            pesquisa_satisfacao(paciente['Nome'])
         case "2":
             print("Tickets")
         case "3":
