@@ -52,7 +52,7 @@ def mostrar_menu_principal(paciente):
     opcao = input("Escolha uma opção: ")
     match opcao:
         case "1":
-            pesquisa_satisfacao(paciente['Nome'])
+            pesquisa_satisfacao(paciente)
         case "2":
             print("Tickets")
         case "3":
@@ -71,50 +71,67 @@ def calcular_media(notas):
     media = (n1 + n2 + n3) / 3
     return media
 
-
-def pesquisa_satisfacao(nome):
+def pesquisa_satisfacao(paciente):
     print("\n" + "=" * 50)
     print("📝 Pesquisa de Satisfação".center(50))
     print("=" * 50)
-    print(f"\n Nome: {nome}")
+    print(f"\n Nome: {paciente['Nome']}")
+
     iniciar = input("\nAperte 1 para começar a pesquisa: ")
+
     if iniciar == "1":
+        # Pergunta sobre o site
         while True:
-            site = float(input("\nDe 0 a 10, qual nota você dá para nosso site? "))
-            if (site >= 0 and site <= 10):
-                break
-            else:
-                print("❌Digite uma nota valida!")
+            try:
+                site = float(input("\nDe 0 a 10, qual nota você dá para nosso site? "))
+                if 0 <= site <= 10:
+                    break
+                else:
+                    print("❌ Digite uma nota válida entre 0 e 10!")
+            except ValueError:
+                print("⚠️ Por favor, digite apenas números.")
 
+        # Pergunta sobre o aplicativo
         while True:
-            app = float(input("\nDe 0 a 10, qual nota você dá para nosso aplicativo? "))
-            if (app >= 0 and app <= 10):
-                break
-            else:
-                print("❌Digite uma nota valida!")
+            try:
+                app = float(input("\nDe 0 a 10, qual nota você dá para nosso aplicativo? "))
+                if 0 <= app <= 10:
+                    break
+                else:
+                    print("❌ Digite uma nota válida entre 0 e 10!")
+            except ValueError:
+                print("⚠️ Por favor, digite apenas números.")
 
+        # Pergunta sobre o suporte
         while True:
-            suporte = input("\nDe 0 a 10, qual nota você dá para nosso suporte? ")
-            if (suporte >= 0 and suporte <= 10):
-                break
-            else:
-                print("❌Digite uma nota valida!")
+            try:
+                suporte = float(input("\nDe 0 a 10, qual nota você dá para nosso suporte? "))
+                if 0 <= suporte <= 10:
+                    break
+                else:
+                    print("❌ Digite uma nota válida entre 0 e 10!")
+            except ValueError:
+                print("⚠️ Por favor, digite apenas números.")
+
+        # Armazena notas em dicionário
         notas = {
             'App': app,
             'Site': site,
             'Suporte': suporte,
         }
+
         print("\n✅ Obrigado por responder à pesquisa!")
         print("----------------------------------------------")
         print("Essas foram suas notas para pesquisa:")
         for k, v in notas.items():
             print(f"{k}: {v}")
-        print(f"A sua nota média foi {calcular_media(notas)}")
+        print(f"A sua nota média foi {calcular_media(notas):.2f}")  # média com 2 casas decimais
+
     else:
         print("Pesquisa cancelada.")
+
     input("\nPressione Enter para continuar...")
-
-
+    mostrar_menu_principal(paciente)
 
 
 # === Main ===
