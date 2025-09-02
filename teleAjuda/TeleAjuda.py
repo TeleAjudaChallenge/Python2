@@ -1,3 +1,6 @@
+
+# AREA DO USUARIO
+# == Validação do Usuario ==
 def validar_usuario(lista_pacientes, usuario, senha):
     for i in range(len(lista_pacientes)):
         if (lista_pacientes[i]['Usuario'] == usuario and lista_pacientes[i]['Senha'] == senha):
@@ -6,6 +9,7 @@ def validar_usuario(lista_pacientes, usuario, senha):
             return paciente
     return False
 
+# == Localizar indice do usuario ==
 def localizar_usuario(lista_pacientes, usuario):
     indice = -1
     for i in range(len(lista_pacientes)):
@@ -13,6 +17,7 @@ def localizar_usuario(lista_pacientes, usuario):
             indice = i
     return(indice)
 
+# == Cadastrar Usuario ==
 def cadastrar_usuario(lista_pacientes):
     try:
         usuario = input("Digite o usuario: ")
@@ -37,7 +42,8 @@ def cadastrar_usuario(lista_pacientes):
         print("Paciente cadastrado com sucesso!")
         mostrar_menu_principal(paciente)
 
-# === Menu Principal ===
+#===================================================================================
+# MENU PRINCIPAL
 def mostrar_menu_principal(paciente):
     print("\n" + "=" * 50)
     print(f"🌐 BEM-VINDO(A) {paciente['Nome']}".center(50))
@@ -64,6 +70,7 @@ def mostrar_menu_principal(paciente):
         case "6":
             main()
 
+#=========================================================================================
 # AREA DO PACIENTE
 # === Area do Paciente ===
 def area_paciente(paciente):
@@ -90,7 +97,7 @@ def area_paciente(paciente):
         case "3":
             alterar_senha(paciente)
         case "4":
-            print("Alterar data de nascimento")
+            alterar_datanasc(paciente)
         case "5":
             print("Deletar conta")
         case "6":
@@ -146,10 +153,26 @@ def alterar_senha(paciente):
             area_paciente(paciente)
         case "2":
             area_paciente(paciente)
+# == Alterar Data de Nascimento ==
+def alterar_datanasc(paciente):
+    print("\n" + "-" * 50)
+    print("Data de nascimento atual: " + paciente['Data de Nascimento'])
+    nova_datanasc = input("Digite a nova data de nascimento: ")
+    print("\n Nova data de nascimento sera: " + nova_datanasc)
+    print("-" * 50)
+    opcao = input("Deseja salvar a alteração (1-SIM/2-NAO): ")
+    match opcao:
+        case "1":
+            indice = localizar_usuario(lista_pacientes, paciente['Usuario'])
+            lista_pacientes[indice]['Data de Nascimento'] = nova_datanasc
+            paciente = lista_pacientes[indice]
+            area_paciente(paciente)
+        case "2":
+            area_paciente(paciente)
 
-
-
+#=====================================================================================
 # PESQUISA DE SATISFAÇÃO
+# == Calcular Media Pesquisa ==
 def calcular_media(notas):
     n1 = float(notas['App'])
     n2 = float(notas['Site'])
@@ -157,6 +180,7 @@ def calcular_media(notas):
     media = (n1 + n2 + n3) / 3
     return media
 
+# == Pesquisa de Satisfação ==
 def pesquisa_satisfacao(paciente):
     print("\n" + "=" * 50)
     print("📝 Pesquisa de Satisfação".center(50))
@@ -215,7 +239,48 @@ def pesquisa_satisfacao(paciente):
     input("\nPressione Enter para continuar...")
     mostrar_menu_principal(paciente)
 
+#============================================================================================
+# AREA DE TICKET
+def menu_ticket(paciente):
+    print("\n" + "=" * 50)
+    print("📝 TICKETS".center(50))
+    print("=" * 50)
+    print(f" Nome do Paciente: {paciente['Nome']}")
+    print("=" * 50)
+    print("1️⃣  Criar Ticket")
+    print("2️⃣  Ver Tickets")
+    print("3️⃣  Voltar para o menu")
+    print("-" * 50)
+    opcao = input("Escolha uma opção: ")
+    match opcao:
+        case "1":
+            alterar_usuario(paciente)
+        case "2":
+            alterar_nome(paciente)
+        case "3":
+            mostrar_menu_principal(paciente)
 
+def criar_ticket(paciente):
+    print("\n" + "=" * 50)
+    print("📝 NOVO TICKET".center(50))
+    assunto = input("\n Digite o assunto do seu ticket: ")
+    problema = input("\n Agora nos explique sobre seu problema: ")
+    novoticket = {
+        'Id': len(lista_tickets) +2,
+        'Usuario': paciente["Usuario"],
+        'Assunto': assunto,
+        'Problema': problema,
+        'Resposta': "Sem resposta",
+        'Status': True,
+    }
+    lista_tickets.append(novoticket)
+
+def visualizar_tickets(paciente):
+    return False;
+
+
+
+#==============================================================================================
 # INICIO DO PROGRAMA
 def main():
     print("\n" + "=" * 50)
@@ -245,6 +310,16 @@ pacienteteste = {
             'Data de Nascimento':"17/20/2001"
         }
 lista_pacientes.append(pacienteteste)
+
+lista_tickets = []
+ticketteste = {
+    'Id':1,
+    'Usuario':"pacienteteste",
+    'Assunto':"Erro ao fazer login",
+    'Problema':"Tentei fazer login pelo minha conta do governo mas está dando erro",
+    'Resposta':"Sem resposta",
+    'Status': True,
+}
 
 # Iniciar o programa
 main()
