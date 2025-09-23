@@ -50,24 +50,18 @@ def mostrar_menu_principal(paciente):
     print("=" * 50)
     print("1️⃣  Pesquisa de Satisfação")
     print("2️⃣  Tickets")
-    print("3️⃣  Chatbot")
-    print("4️⃣  Lembretes")
-    print("5️⃣  Área do Paciente")
-    print("6️⃣  🚪 Sair do Sistema")
+    print("3️⃣  Área do Paciente")
+    print("4️⃣  🚪 Sair do Sistema")
     print("-" * 50)
     opcao = input("Escolha uma opção: ")
     match opcao:
         case "1":
             pesquisa_satisfacao(paciente)
         case "2":
-            print("Tickets")
+            menu_ticket(paciente)
         case "3":
-            print("Chatbot")
-        case "4":
-            print("Lembretes")
-        case "5":
             area_paciente(paciente)
-        case "6":
+        case "4":
             main()
 
 #=========================================================================================
