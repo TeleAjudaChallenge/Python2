@@ -248,9 +248,9 @@ def menu_ticket(paciente):
     opcao = input("Escolha uma opção: ")
     match opcao:
         case "1":
-            alterar_usuario(paciente)
+            criar_ticket(paciente)
         case "2":
-            alterar_nome(paciente)
+            visualizar_tickets(paciente)
         case "3":
             mostrar_menu_principal(paciente)
 
@@ -268,9 +268,19 @@ def criar_ticket(paciente):
         'Status': True,
     }
     lista_tickets.append(novoticket)
+    menu_ticket(paciente)
 
 def visualizar_tickets(paciente):
-    return False;
+    print("\n" + "=" * 50)
+    print("📝 TODOS OS TICKETS".center(50))
+    for ticket in lista_tickets:
+        if ticket["Usuario"] == paciente["Usuario"]:
+            for chave, valor in ticket.items():
+                print(f"{chave}: {valor}")
+            print("------------------------------------")
+    
+    input("\nPressione Enter para continuar...")
+    menu_ticket(paciente)
 
 
 
