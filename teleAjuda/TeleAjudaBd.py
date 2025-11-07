@@ -956,7 +956,7 @@ def visualizar_ticket(cpfPaciente, inst_SQL, conn=None):
         case _:
             print("⚠️ Opção inválida.")
             input("\nPressione Enter para continuar...")
-            return
+            menu_ticket(cpfPaciente, inst_SQL, conn)
 
 def menu_ticket(cpfPaciente, inst_SQL, conn=None):
     while True:
@@ -1085,6 +1085,113 @@ def responder_ticket(cpfFuncionario, inst_SQL, conn=None):
     menu_ticket_func(cpfFuncionario, inst_SQL, conn)
 
 
+def visualizar_ticket_func(cpfFuncionario, inst_SQL, conn):
+    print("\n" + "=" * 60)
+    print("🔎 VISUALIZAR TICKET".center(60))
+    print("=" * 60)
+
+    try:
+        id_str = input("Digite o código do ticket: ").strip()
+        id_ticket = int(id_str)
+    except ValueError:
+        print("⚠️ Código inválido.")
+        input("\nPressione Enter para continuar...")
+        menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+
+    # Busca completa do ticket + paciente
+    sql = """
+            SELECT  t.id_ticket,
+                    t.assunto,
+                    t.descricao,
+                    t.resposta,
+                    t.dt_abertura,
+                    t.dt_fechamento,
+                    t.status,
+                    p.cpf_paciente,
+                    p.nm_paciente
+              FROM  T_TAJ_TICKET t
+              JOIN  T_TAJ_PACIENTE p
+                ON  p.cpf_paciente = t.PACIENTE_cpf_paciente
+             WHERE  t.id_ticket = :p_id
+               AND  t.FUNCIONARIO_cpf_funcionario = :p_func
+        """
+    inst_SQL.execute(sql, {"p_id": id_ticket, "p_func": cpfFuncionario})
+    row = inst_SQL.fetchone()
+
+    if not row:
+        print("❌ Ticket não encontrado ou não pertence a este funcionário.")
+        input("\nPressione Enter para continuar...")
+        menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+
+    # Exibição de detalhes
+    print("\n" + "-" * 60)
+    print(f"🆔 Código:        {row[0]}")
+    print(f"➡️ Assunto:       {row[1]}")
+    print(f"➡️ Descrição:     {row[2] or '-'}")
+    print(f"➡️ Resposta:      {row[3] or '-'}")
+    print(f"📅 Abertura:      {row[4]}")
+    print(f"📅 Fechamento:    {row[5] or '-'}")
+    print(f"➡️  Status:        {row[6]}")
+    print(f"👤 CPF Paciente:  {row[7]}")
+    print(f"👤 Nome Paciente: {row[8]}")
+    print("-" * 60)
+
+    # Menu único
+    print("\n1️⃣ ↩️ Voltar")
+    acao = input("Escolha uma opção: ").strip()
+
+    match acao:
+        case "1":
+            menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+        case _:
+            print("⚠️ Opção inválida.")
+            input("\nPressione Enter para continuar...")
+            menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+
+
+def meus_tickets(cpfFuncionario, inst_SQL, conn):
+    while True:
+        print("\n" + "=" * 60)
+        print("🗂️  MEUS TICKETS".center(60))
+        print("=" * 60)
+
+        sql = """
+                SELECT  t.id_ticket,
+                        t.assunto,
+                        p.nm_paciente
+                  FROM  T_TAJ_TICKET t
+                  JOIN  T_TAJ_PACIENTE p
+                    ON  p.cpf_paciente = t.PACIENTE_cpf_paciente
+                 WHERE  t.FUNCIONARIO_cpf_funcionario = :cpf
+                 ORDER BY t.id_ticket DESC
+            """
+        inst_SQL.execute(sql, {"cpf": cpfFuncionario})
+        rows = inst_SQL.fetchall()
+
+        cols = ["Código", "Assunto", "Nome do Paciente"]
+        df = pd.DataFrame(rows, columns=cols)
+
+        if df.empty:
+            print("Você não possui tickets atribuídos.")
+        else:
+            print(df.to_string(index=False))
+
+        print("\n" + "-" * 60)
+        print("1️⃣ Visualizar")
+        print("2️⃣ ↩️ Voltar")
+        print("-" * 60)
+        acao = input("Escolha uma opção: ").strip()
+
+        match acao:
+            case "1":
+                visualizar_ticket_func(cpfFuncionario, inst_SQL, conn)
+                continue
+            case "2":
+                menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+            case _:
+                print("⚠️ Opção inválida. Tente novamente.")
+
+
 def menu_ticket_func(cpfFuncionario, inst_SQL, conn=None):
     while True:
         print("\n" + "=" * 60)
@@ -1118,7 +1225,7 @@ def menu_ticket_func(cpfFuncionario, inst_SQL, conn=None):
         print("\n" + "-" * 60)
         print("1️⃣ Responder ticket")
         print("2️⃣ Meus tickets")
-        print("3️⃣ Voltar")
+        print("3️⃣ ↩️ Voltar")
         print("-" * 60)
         acao = input("Escolha uma opção: ").strip()
         match acao:
