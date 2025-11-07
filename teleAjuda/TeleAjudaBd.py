@@ -1137,16 +1137,45 @@ def visualizar_ticket_func(cpfFuncionario, inst_SQL, conn):
     print("-" * 60)
 
     # Menu único
-    print("\n1️⃣ ↩️ Voltar")
+    print("\n1️⃣ ❌ Excluir ticket")
+    print("2️⃣ ↩️ Voltar")
     acao = input("Escolha uma opção: ").strip()
 
     match acao:
         case "1":
-            menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+            confirmar = input("\nTem certeza que deseja excluir este ticket? (1-SIM / 2-NÃO): ").strip()
+            if confirmar != "1":
+                print("↩️ Exclusão cancelada.")
+                input("\nPressione Enter para continuar...")
+                meus_tickets(cpfFuncionario, inst_SQL, conn)
+
+            try:
+                delete_sql = """
+                    DELETE FROM T_TAJ_TICKET
+                     WHERE id_ticket = :p_id
+                       AND FUNCIONARIO_cpf_funcionario = :p_func
+                """
+                inst_SQL.execute(delete_sql, {"p_id": id_ticket, "p_func": cpfFuncionario})
+                if conn:
+                    conn.commit()
+                print("\n✅ Ticket excluído com sucesso!")
+            except Exception as e:
+                print("❌ Erro ao excluir ticket:", e)
+                if conn:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+
+            input("\nPressione Enter para continuar...")
+            meus_tickets(cpfFuncionario, inst_SQL, conn)
+
+        case "2":
+            meus_tickets(cpfFuncionario, inst_SQL, conn)
         case _:
             print("⚠️ Opção inválida.")
             input("\nPressione Enter para continuar...")
-            menu_ticket_func(cpfFuncionario, inst_SQL, conn)
+            meus_tickets(cpfFuncionario, inst_SQL, conn)
 
 
 def meus_tickets(cpfFuncionario, inst_SQL, conn):
