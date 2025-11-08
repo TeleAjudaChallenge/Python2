@@ -1,6 +1,7 @@
 import pandas as pd
 import oracledb as orcl
 import json
+import requests
 
 def conectar_BD():
     try:
@@ -178,16 +179,38 @@ def cadastrar_paciente(inst_SQL, conn):
         email = input("E-mail: ")
         rghc = input("RGHC (opcional): ")
         dt_nasc = input("Data de nascimento (YYYY-MM-DD): ")
+        while True:
+            print("Endereço")
+            cep = input("Digite o CEP: ").strip()
+            url = f"https://viacep.com.br/ws/{cep}/json/"
+            requisicao = requests.get(url)
+            if requisicao.status_code == 200:
+                dados_cep = requisicao.json()
+                if "erro" in dados_cep:
+                    print("❌ CEP não encontrado. Tente novamente.\n")
+                    continue
+                endereco = (
+                    f"{dados_cep['logradouro']}, "
+                    f"{dados_cep['bairro']}, "
+                    f"{dados_cep['localidade']} - {dados_cep['uf']}, "
+                    f"CEP: {cep}"
+                )
+                print("\n✅ CEP encontrado!")
+                print(f"Endereço completo: {endereco}")
+                break
+            else:
+                print("⚠️ Erro ao localizar CEP, tente novamente.\n")
+
         senha = input("Senha: ")
 
         sql = """
             INSERT INTO T_TAJ_PACIENTE (
                 cpf_paciente, nm_paciente, tel_paciente, mail_paciente,
-                rghc, dt_nasc_paciente, senha_paciente
+                rghc, dt_nasc_paciente, senha_paciente, end_paciente
             ) VALUES (
-                :cpf, :nome, :tel, :email, :rghc, :dt_nasc, :senha
+                :cpf, :nome, :tel, :email, :rghc, :dt_nasc, :senha, :endereco
             )
-            """
+        """
         inst_SQL.execute(sql, {
             "cpf": cpf,
             "nome": nome,
@@ -195,7 +218,8 @@ def cadastrar_paciente(inst_SQL, conn):
             "email": email,
             "rghc": rghc,
             "dt_nasc": dt_nasc,
-            "senha": senha
+            "senha": senha,
+            "endereco": endereco
         })
         if conn:
             conn.commit()
@@ -262,13 +286,15 @@ def menu_paciente(cpfPaciente, inst_SQL, conn):
 # === Area do Paciente ===
 def area_paciente(cpfPaciente, inst_SQL, conn=None):
     while True:
+        # Agora também buscamos o end_paciente
         inst_SQL.execute("""
             SELECT cpf_paciente,
                    nm_paciente,
                    tel_paciente,
                    mail_paciente,
                    rghc,
-                   dt_nasc_paciente
+                   dt_nasc_paciente,
+                   end_paciente
               FROM T_TAJ_PACIENTE
              WHERE cpf_paciente = :cpf
         """, {"cpf": cpfPaciente})
@@ -282,7 +308,7 @@ def area_paciente(cpfPaciente, inst_SQL, conn=None):
             print("❌ Paciente não encontrado.")
             return
 
-        cols = ["CPF", "Nome", "Telefone", "E-mail", "RGHC", "Data de Nascimento"]
+        cols = ["CPF", "Nome", "Telefone", "E-mail", "RGHC", "Data de Nascimento", "Endereço"]
         df = pd.DataFrame([row], columns=cols)
         print(df.to_string(index=False))
 
@@ -293,7 +319,8 @@ def area_paciente(cpfPaciente, inst_SQL, conn=None):
         print("4️⃣  Alterar RGHC")
         print("5️⃣  Alterar data de nascimento")
         print("6️⃣  Alterar senha")
-        print("7️⃣  Voltar ao menu principal")
+        print("7️⃣  Alterar endereço")
+        print("8️⃣  Voltar ao menu principal")
         print("=" * 50)
 
         opcao = input("Escolha uma opção: ").strip()
@@ -312,6 +339,9 @@ def area_paciente(cpfPaciente, inst_SQL, conn=None):
             case "6":
                 alterar_senha_paciente(cpfPaciente, inst_SQL, conn)
             case "7":
+                alterar_endereco(cpfPaciente, inst_SQL, conn)
+
+            case "8":
                 menu_paciente(cpfPaciente, inst_SQL, conn)
             case _:
                 print("⚠️ Opção inválida. Tente novamente.")
@@ -492,6 +522,79 @@ def alterar_senha_paciente(cpfPaciente, inst_SQL, conn=None):
             print("\n⚠️ Opção inválida, nenhuma alteração feita.")
     input("\nEnter para continuar...")
     area_paciente(cpfPaciente, inst_SQL, conn)
+
+#== alterar endereço ==
+import requests
+
+def alterar_endereco(cpfPaciente, inst_SQL, conn=None):
+    while True:
+        print("\n" + "-" * 50)
+        cep = input("Digite o CEP (somente números): ").strip()
+        endereco = None
+        erro_msg = None
+        try:
+            resp = requests.get(f"https://viacep.com.br/ws/{cep}/json/", timeout=10)
+            if resp.status_code != 200:
+                erro_msg = "⚠️ Erro na consulta ao ViaCEP."
+            else:
+                dados = resp.json()
+                if "erro" in dados:
+                    erro_msg = "❌ CEP não encontrado."
+                else:
+                    endereco = (
+                        f"{dados.get('logradouro','')}, "
+                        f"{dados.get('bairro','')}, "
+                        f"{dados.get('localidade','')} - {dados.get('uf','')}, "
+                        f"CEP: {cep}"
+                    )
+        except Exception as e:
+            erro_msg = f"⚠️ Erro de conexão com o ViaCEP: {e}"
+        if not endereco:
+            print("\n" + (erro_msg or "⚠️ Não foi possível obter o endereço."))
+            print("-" * 50)
+            escolha = input("Deseja tentar novamente? (1 - SIM / 2 - CANCELAR): ").strip()
+            if escolha == "1":
+                continue
+            else:
+                print("\n↩️ Operação cancelada. Voltando para a área do paciente...")
+                area_paciente(cpfPaciente, inst_SQL, conn)
+        print("\n✅ Endereço localizado:")
+        print(endereco)
+        print("-" * 50)
+        opcao = input("Deseja salvar a alteração? (1 - SIM / 2 - NÃO): ").strip()
+
+        match opcao:
+            case "1":
+                try:
+                    sql = """
+                        UPDATE T_TAJ_PACIENTE
+                           SET end_paciente = :novo_end
+                         WHERE cpf_paciente = :cpf
+                    """
+                    inst_SQL.execute(sql, {"novo_end": endereco, "cpf": cpfPaciente})
+                    if conn:
+                        conn.commit()
+                    print("\n✅ Endereço atualizado com sucesso!")
+                except Exception as e:
+                    print("❌ Erro ao atualizar endereço:", e)
+                    if conn:
+                        try:
+                            conn.rollback()
+                        except Exception:
+                            pass
+                input("\nPressione Enter para continuar...")
+                area_paciente(cpfPaciente, inst_SQL, conn)
+                return
+            case "2":
+                print("\n↩️ Alteração cancelada.")
+                input("\nPressione Enter para continuar...")
+                area_paciente(cpfPaciente, inst_SQL, conn)
+                return
+            case _:
+                print("\n⚠️ Opção inválida, nenhuma alteração feita.")
+                input("\nPressione Enter para continuar...")
+                area_paciente(cpfPaciente, inst_SQL, conn)
+
 
 #======================================================================================
 #AREA DO FUNCIONARIO
@@ -941,7 +1044,7 @@ def visualizar_ticket(cpfPaciente, inst_SQL, conn=None):
     print(f"➡️ Resposta:      {row[3]}")
     print(f"📅 Abertura:      {row[4]}")
     print(f"📅 Fechamento:    {row[5]}")
-    print(f"➡️  Status:        {row[6]}")
+    print(f"➡️ Status:        {row[6]}")
     print(f"👤 Funcionário responsável: {row[7]}")
     print("-" * 50)
     print("\n1️⃣ Alterar descrição")
@@ -1035,7 +1138,7 @@ def responder_ticket(cpfFuncionario, inst_SQL, conn=None):
     print(f"➡️ Resposta:      {row[3]}")
     print(f"📅 Abertura:      {row[4]}")
     print(f"📅 Fechamento:    {row[5]}")
-    print(f"➡️  Status:        {row[6]}")
+    print(f"➡️ Status:        {row[6]}")
     print(f"👤 CPF Paciente:  {row[7]}")
     print(f"👤 Nome Paciente: {row[8]}")
     print("-" * 60)
@@ -1123,15 +1226,14 @@ def visualizar_ticket_func(cpfFuncionario, inst_SQL, conn):
         input("\nPressione Enter para continuar...")
         menu_ticket_func(cpfFuncionario, inst_SQL, conn)
 
-    # Exibição de detalhes
     print("\n" + "-" * 60)
     print(f"🆔 Código:        {row[0]}")
     print(f"➡️ Assunto:       {row[1]}")
-    print(f"➡️ Descrição:     {row[2] or '-'}")
-    print(f"➡️ Resposta:      {row[3] or '-'}")
+    print(f"➡️ Descrição:     {row[2]}")
+    print(f"➡️ Resposta:      {row[3]}")
     print(f"📅 Abertura:      {row[4]}")
-    print(f"📅 Fechamento:    {row[5] or '-'}")
-    print(f"➡️  Status:        {row[6]}")
+    print(f"📅 Fechamento:    {row[5]}")
+    print(f"➡️ Status:        {row[6]}")
     print(f"👤 CPF Paciente:  {row[7]}")
     print(f"👤 Nome Paciente: {row[8]}")
     print("-" * 60)
